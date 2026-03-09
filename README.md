@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AutoParts POS — Retail POS System
+
+A full-featured Point of Sale system built for a small auto accessories shop.
+
+## Tech Stack
+
+- **Next.js 16** (App Router) with TypeScript
+- **shadcn/ui** + Tailwind CSS for the UI
+- **MongoDB** with Mongoose ODM
+- **NextAuth.js** v4 for authentication (Credentials provider)
+- **Recharts** for sales/profit charts
+- **react-to-print** for invoice printing
+
+## Features
+
+- **Login / Auth** — JWT-based sessions via NextAuth, two roles: `admin` and `employee`
+- **Point of Sale** — Real-time product search, cart management, discount support, cash/online payment
+- **Bill Generation** — Auto-generated sequential invoice (INV-0001, INV-0002...), printable A4 invoice
+- **Stock Management** — Automatic atomic stock deduction on every sale
+- **Inventory** (admin only) — Full product CRUD: add, edit, delete; low stock indicators (≤5 units highlighted)
+- **Reports** (admin only) — Daily/Monthly/Yearly sales and profit bar charts, line trend chart, summary stats
+- **Bills History** — Paginated table of all invoices with search
 
 ## Getting Started
 
-First, run the development server:
+### 1. Prerequisites
+
+- Node.js v18+
+- MongoDB running locally or MongoDB Atlas connection string
+
+### 2. Environment Variables
+
+Create `.env.local` (already created, update values as needed):
+
+```env
+MONGODB_URI=mongodb://localhost:27017/retail-lite-pos
+NEXTAUTH_SECRET=your-super-secret-key-change-in-production
+NEXTAUTH_URL=http://localhost:3000
+```
+
+For MongoDB Atlas, replace `MONGODB_URI` with your Atlas connection string.
+
+### 3. Install Dependencies
+
+```bash
+npm install
+```
+
+### 4. Seed the Database
+
+This creates 2 users and 15 sample products:
+
+```bash
+MONGODB_URI=mongodb://localhost:27017/retail-lite-pos npm run seed
+```
+
+**Default credentials:**
+
+| Role     | Email                  | Password     |
+|----------|------------------------|--------------|
+| Admin    | admin@shop.com         | admin123     |
+| Employee | employee@shop.com      | employee123  |
+
+### 5. Run the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/
+│   ├── (auth)/login/          # Login page
+│   ├── (dashboard)/           # All protected pages
+│   │   ├── page.tsx           # Dashboard (stats + recent sales)
+│   │   ├── pos/               # Point of Sale
+│   │   ├── bills/             # Bills list + [id] invoice view
+│   │   ├── inventory/         # Product management (admin)
+│   │   └── reports/           # Charts (admin)
+│   └── api/                   # REST API routes
+├── components/
+│   ├── ui/                    # shadcn/ui components
+│   ├── layout/                # Sidebar, Topbar, Mobile nav
+│   └── bills/                 # Invoice template
+├── lib/
+│   ├── db.ts                  # MongoDB connection
+│   ├── auth.ts                # NextAuth config
+│   └── utils.ts               # formatCurrency helper
+└── models/
+    ├── User.ts
+    ├── Product.ts
+    └── Sale.ts
+```
 
-## Learn More
+## Role-Based Access
 
-To learn more about Next.js, take a look at the following resources:
+| Feature      | Admin | Employee |
+|-------------|-------|----------|
+| Dashboard   | ✓     | ✓        |
+| POS / Billing | ✓   | ✓        |
+| Bills History | ✓   | ✓        |
+| Inventory   | ✓     | ✗        |
+| Reports     | ✓     | ✗        |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Profit Calculation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+When adding a product, you set:
+- **Base price** — purchase/cost price
+- **Selling price** — retail price
 
-## Deploy on Vercel
+Per sale, profit = `(sellingPrice - basePrice) × quantity` per item.  
+The `totalProfit` is stored on every Sale document and used in reports.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Production Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Set `MONGODB_URI` to your MongoDB Atlas URI
+2. Set a strong `NEXTAUTH_SECRET`
+3. Run `npm run build && npm start`
