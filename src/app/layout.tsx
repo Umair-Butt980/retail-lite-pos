@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AutoParts POS",
+  title: `${process.env.NEXT_PUBLIC_SHOP_NAME ?? "AutoParts"} POS`,
   description: "Retail POS system for auto accessories shop",
 };
 

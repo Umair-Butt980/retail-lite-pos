@@ -28,6 +28,11 @@ interface InvoiceTemplateProps {
   sale: Sale;
 }
 
+const shopName = process.env.NEXT_PUBLIC_SHOP_NAME ?? "AutoParts Shop";
+const shopAddress = process.env.NEXT_PUBLIC_SHOP_ADDRESS ?? "";
+const shopPhone = process.env.NEXT_PUBLIC_SHOP_PHONE ?? "";
+const shopEmail = process.env.NEXT_PUBLIC_SHOP_EMAIL ?? "";
+
 const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(({ sale }, ref) => {
   const totalQty = sale.items.reduce((s, i) => s + i.quantity, 0);
 
@@ -41,11 +46,11 @@ const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(({ sale
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">AutoParts Shop</h1>
-          <p className="text-gray-600 text-xs mt-1">Auto Accessories & Car Accessories</p>
-          <p className="text-gray-600 text-xs">Lahore, Pakistan</p>
-          <p className="text-gray-600 text-xs">Tel: 03001234567</p>
-          <p className="text-gray-600 text-xs">info@autoparts.pk</p>
+          <h1 className="text-xl font-bold text-gray-900">{shopName}</h1>
+          <p className="text-gray-600 text-xs mt-1">Auto Accessories &amp; Car Accessories</p>
+          {shopAddress && <p className="text-gray-600 text-xs">{shopAddress}</p>}
+          {shopPhone && <p className="text-gray-600 text-xs">Tel: {shopPhone}</p>}
+          {shopEmail && <p className="text-gray-600 text-xs">{shopEmail}</p>}
         </div>
         <div className="text-right">
           <h2 className="text-2xl font-bold tracking-wider text-gray-800">INVOICE</h2>
@@ -136,7 +141,7 @@ const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(({ sale
       <div className="border-t border-gray-300 pt-3 text-xs text-gray-500 space-y-1">
         <p>Note: 7 Days Money Back Guarantee for Un-used Products.</p>
         <p>In case of Return Courier Charges for Returns will be charged to Customer and Payment Refund into Bank Account after Product Received Back. Kindly Check Your order as per Invoice at the time of pickup.</p>
-        <p>AutoParts Shop will not be responsible for any short Quantity.</p>
+        <p>{shopName} will not be responsible for any short Quantity.</p>
         <p>All Electronic Products are Checked Before Dispatched. There is No Warranty for Electronic Products.</p>
       </div>
 
