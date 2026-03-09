@@ -51,7 +51,7 @@ export default function LoginPage() {
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
             <ShoppingBag className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">AutoParts POS</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Auto786 POS</h1>
           <p className="text-sm text-muted-foreground">Auto accessories shop management</p>
         </div>
 

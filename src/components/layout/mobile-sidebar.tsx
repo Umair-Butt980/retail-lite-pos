@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Menu,
   X,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ const navItems = [
   { href: "/pos", label: "Point of sale", icon: ShoppingCart, adminOnly: false },
   { href: "/bills", label: "Bills", icon: FileText, adminOnly: false },
   { href: "/inventory", label: "Inventory", icon: Package, adminOnly: true },
+  { href: "/suppliers", label: "Suppliers", icon: Users, adminOnly: true },
   { href: "/reports", label: "Reports", icon: BarChart3, adminOnly: true },
 ];
 

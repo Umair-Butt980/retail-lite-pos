@@ -6,7 +6,7 @@ export default withAuth(
     const token = req.nextauth.token;
     const pathname = req.nextUrl.pathname;
 
-    const adminOnlyPaths = ["/inventory", "/reports"];
+    const adminOnlyPaths = ["/inventory", "/reports", "/suppliers"];
     const isAdminOnly = adminOnlyPaths.some((path) => pathname.startsWith(path));
 
     if (isAdminOnly && token?.role !== "admin") {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { TrendingUp, ShoppingCart, Package, AlertTriangle, DollarSign, Eye } from "lucide-react";
+import { TrendingUp, ShoppingCart, Package, AlertTriangle, DollarSign, Eye, Wallet } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ interface DashboardData {
   todaySales: number;
   todayProfit: number;
   todayOrders: number;
+  todaySupplierPayments: number;
+  netCash: number;
   totalProducts: number;
   lowStockProducts: number;
   recentSales: {
@@ -54,11 +56,25 @@ export default function DashboardPage() {
       color: "text-blue-600",
     },
     {
+      title: "Supplier payments",
+      value: loading ? "—" : formatCurrency(data?.todaySupplierPayments ?? 0),
+      description: "Paid to suppliers today",
+      icon: Wallet,
+      color: "text-orange-600",
+    },
+    {
+      title: "Net cash today",
+      value: loading ? "—" : formatCurrency(data?.netCash ?? 0),
+      description: "Sales minus supplier payments",
+      icon: TrendingUp,
+      color: "text-purple-600",
+    },
+    {
       title: "Total products",
       value: loading ? "—" : String(data?.totalProducts ?? 0),
       description: "Products in inventory",
       icon: Package,
-      color: "text-purple-600",
+      color: "text-blue-600",
     },
     {
       title: "Low stock alerts",
@@ -76,7 +92,7 @@ export default function DashboardPage() {
         <p className="text-muted-foreground text-sm">Overview of your shop performance today</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import Sale from "@/models/Sale";
+import SupplierPayment from "@/models/SupplierPayment";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
     labelField = "year";
   }
 
-  const [chartData, summary] = await Promise.all([
+  const [chartData, supplierChartData, summary, supplierSummary] = await Promise.all([
     Sale.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       {
@@ -52,6 +53,16 @@ export async function GET(req: NextRequest) {
           totalSales: { $sum: "$grandTotal" },
           totalProfit: { $sum: "$totalProfit" },
           orderCount: { $sum: 1 },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
+    ]),
+    SupplierPayment.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      {
+        $group: {
+          _id: groupFormat,
+          totalPaid: { $sum: "$amount" },
         },
       },
       { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
@@ -68,30 +79,51 @@ export async function GET(req: NextRequest) {
         },
       },
     ]),
+    SupplierPayment.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      { $group: { _id: null, totalPaid: { $sum: "$amount" }, paymentCount: { $sum: 1 } } },
+    ]),
   ]);
 
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+  // Build a lookup map for supplier payments by label
+  const supplierMap = new Map<string, number>();
+  for (const d of supplierChartData) {
+    let key = "";
+    if (period === "daily") key = `${d._id.day}/${d._id.month}`;
+    else if (period === "monthly") key = months[d._id.month - 1];
+    else key = String(d._id.year);
+    supplierMap.set(key, Math.round(d.totalPaid));
+  }
+
   const formattedChart = chartData.map((d) => {
     let label = "";
-    if (period === "daily") {
-      label = `${d._id.day}/${d._id.month}`;
-    } else if (period === "monthly") {
-      label = months[d._id.month - 1];
-    } else {
-      label = String(d._id.year);
-    }
+    if (period === "daily") label = `${d._id.day}/${d._id.month}`;
+    else if (period === "monthly") label = months[d._id.month - 1];
+    else label = String(d._id.year);
+
+    const supplierPaid = supplierMap.get(label) ?? 0;
     return {
       label,
       sales: Math.round(d.totalSales),
       profit: Math.round(d.totalProfit),
       orders: d.orderCount,
+      supplierPayments: supplierPaid,
+      netCash: Math.round(d.totalSales) - supplierPaid,
     };
   });
 
+  const totalSupplierPaid = supplierSummary[0]?.totalPaid ?? 0;
+  const grossSales = summary[0]?.totalSales ?? 0;
+
   return NextResponse.json({
     chart: formattedChart,
-    summary: summary[0] ?? { totalSales: 0, totalProfit: 0, orderCount: 0, avgOrderValue: 0 },
+    summary: {
+      ...(summary[0] ?? { totalSales: 0, totalProfit: 0, orderCount: 0, avgOrderValue: 0 }),
+      totalSupplierPayments: totalSupplierPaid,
+      netCash: grossSales - totalSupplierPaid,
+    },
     labelField,
   });
 }

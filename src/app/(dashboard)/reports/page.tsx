@@ -13,7 +13,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Loader2, TrendingUp, DollarSign, ShoppingCart, BarChart3 } from "lucide-react";
+import { Loader2, TrendingUp, DollarSign, ShoppingCart, BarChart3, Wallet } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/utils";
@@ -30,6 +30,8 @@ interface Summary {
   totalProfit: number;
   orderCount: number;
   avgOrderValue: number;
+  totalSupplierPayments: number;
+  netCash: number;
 }
 
 export default function ReportsPage() {
@@ -72,17 +74,31 @@ export default function ReportsPage() {
           description: periodLabel,
         },
         {
+          title: "Supplier payments",
+          value: formatCurrency(summary.totalSupplierPayments ?? 0),
+          icon: Wallet,
+          color: "text-orange-600",
+          description: "Paid to suppliers",
+        },
+        {
+          title: "Net cash",
+          value: formatCurrency(summary.netCash ?? 0),
+          icon: BarChart3,
+          color: "text-purple-600",
+          description: "Sales minus supplier payments",
+        },
+        {
           title: "Total orders",
           value: String(summary.orderCount),
           icon: ShoppingCart,
-          color: "text-purple-600",
+          color: "text-slate-600",
           description: periodLabel,
         },
         {
           title: "Avg. order value",
           value: formatCurrency(summary.avgOrderValue),
           icon: BarChart3,
-          color: "text-orange-600",
+          color: "text-indigo-600",
           description: "Per transaction",
         },
       ]
@@ -114,7 +130,7 @@ export default function ReportsPage() {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             {statsCards.map((stat) => {
               const Icon = stat.icon;
               return (
@@ -153,6 +169,7 @@ export default function ReportsPage() {
                     <Legend />
                     <Bar dataKey="sales" fill="#171717" name="Sales" radius={[3, 3, 0, 0]} />
                     <Bar dataKey="profit" fill="#2a9d90" name="Profit" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="supplierPayments" fill="#f97316" name="Supplier payments" radius={[3, 3, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -180,6 +197,8 @@ export default function ReportsPage() {
                     <Legend />
                     <Line type="monotone" dataKey="sales" stroke="#171717" strokeWidth={2} dot={false} name="Sales" />
                     <Line type="monotone" dataKey="profit" stroke="#2a9d90" strokeWidth={2} dot={false} name="Profit" />
+                    <Line type="monotone" dataKey="supplierPayments" stroke="#f97316" strokeWidth={2} dot={false} name="Supplier payments" strokeDasharray="4 2" />
+                    <Line type="monotone" dataKey="netCash" stroke="#8b5cf6" strokeWidth={2} dot={false} name="Net cash" />
                   </LineChart>
                 </ResponsiveContainer>
               )}
