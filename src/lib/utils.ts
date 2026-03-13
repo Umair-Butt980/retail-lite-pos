@@ -15,3 +15,8 @@ export function formatCurrency(amount: number): string {
 export function generateInvoiceNumber(count: number): string {
   return `INV-${String(count).padStart(4, "0")}`;
 }
+
+// Escapes special regex characters in user input to prevent ReDoS attacks
+export function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

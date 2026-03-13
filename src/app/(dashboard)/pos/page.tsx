@@ -23,6 +23,7 @@ interface Product {
   sellingPrice: number;
   basePrice: number;
   stock: number;
+  location?: string;
 }
 
 interface CartItem {
@@ -229,7 +230,14 @@ export default function POSPage() {
                       >
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{product.name}</p>
-                          <p className="text-xs text-muted-foreground font-mono">{product.sku}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-xs text-muted-foreground font-mono">{product.sku}</p>
+                            {product.location && (
+                              <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+                                📦 {product.location}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="flex flex-col items-end ml-4 shrink-0">
                           <p className="text-sm font-semibold">{formatCurrency(product.sellingPrice)}</p>

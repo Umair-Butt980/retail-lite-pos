@@ -11,6 +11,7 @@ import {
   BarChart3,
   ShoppingBag,
   Users,
+  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, adminOnly: false },
   { href: "/pos", label: "Point of sale", icon: ShoppingCart, adminOnly: false },
   { href: "/bills", label: "Bills", icon: FileText, adminOnly: false },
+  { href: "/external-work", label: "External work", icon: Wrench, adminOnly: false },
   { href: "/inventory", label: "Inventory", icon: Package, adminOnly: true },
   { href: "/suppliers", label: "Suppliers", icon: Users, adminOnly: true },
   { href: "/reports", label: "Reports", icon: BarChart3, adminOnly: true },

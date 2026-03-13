@@ -26,7 +26,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const body = await req.json();
 
-  const product = await Product.findByIdAndUpdate(id, body, { new: true, runValidators: true }).lean();
+  // Destructure only the fields users are allowed to update — prevents mass assignment
+  const { sku: _sku, name, description, category, basePrice, sellingPrice, stock, location, image } = body;
+  const allowedUpdate = { name, description, category, basePrice, sellingPrice, stock, location, image };
+
+  const product = await Product.findByIdAndUpdate(id, allowedUpdate, { new: true, runValidators: true }).lean();
   if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
   return NextResponse.json(product);

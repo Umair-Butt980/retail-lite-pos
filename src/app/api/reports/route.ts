@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import Sale from "@/models/Sale";
 import SupplierPayment from "@/models/SupplierPayment";
+import ExternalWork from "@/models/ExternalWork";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
     labelField = "year";
   }
 
-  const [chartData, supplierChartData, summary, supplierSummary] = await Promise.all([
+  const [chartData, supplierChartData, externalChartData, summary, supplierSummary, externalSummary] = await Promise.all([
     Sale.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       {
@@ -67,6 +68,18 @@ export async function GET(req: NextRequest) {
       },
       { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
     ]),
+    ExternalWork.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      {
+        $group: {
+          _id: groupFormat,
+          totalRevenue: { $sum: "$chargedPrice" },
+          totalProfit: { $sum: "$profit" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
+    ]),
     Sale.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       {
@@ -83,46 +96,57 @@ export async function GET(req: NextRequest) {
       { $match: { createdAt: { $gte: startDate } } },
       { $group: { _id: null, totalPaid: { $sum: "$amount" }, paymentCount: { $sum: 1 } } },
     ]),
+    ExternalWork.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      { $group: { _id: null, totalRevenue: { $sum: "$chargedPrice" }, totalProfit: { $sum: "$profit" }, count: { $sum: 1 } } },
+    ]),
   ]);
 
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  // Build a lookup map for supplier payments by label
+  const getLabel = (d: { _id: { day?: number; month?: number; year?: number } }) => {
+    if (period === "daily") return `${d._id.day}/${d._id.month}`;
+    if (period === "monthly") return months[(d._id.month ?? 1) - 1];
+    return String(d._id.year);
+  };
+
   const supplierMap = new Map<string, number>();
-  for (const d of supplierChartData) {
-    let key = "";
-    if (period === "daily") key = `${d._id.day}/${d._id.month}`;
-    else if (period === "monthly") key = months[d._id.month - 1];
-    else key = String(d._id.year);
-    supplierMap.set(key, Math.round(d.totalPaid));
+  for (const d of supplierChartData) supplierMap.set(getLabel(d), Math.round(d.totalPaid));
+
+  const externalMap = new Map<string, { revenue: number; profit: number }>();
+  for (const d of externalChartData) {
+    externalMap.set(getLabel(d), { revenue: Math.round(d.totalRevenue), profit: Math.round(d.totalProfit) });
   }
 
   const formattedChart = chartData.map((d) => {
-    let label = "";
-    if (period === "daily") label = `${d._id.day}/${d._id.month}`;
-    else if (period === "monthly") label = months[d._id.month - 1];
-    else label = String(d._id.year);
-
+    const label = getLabel(d);
     const supplierPaid = supplierMap.get(label) ?? 0;
+    const ext = externalMap.get(label) ?? { revenue: 0, profit: 0 };
     return {
       label,
       sales: Math.round(d.totalSales),
       profit: Math.round(d.totalProfit),
       orders: d.orderCount,
       supplierPayments: supplierPaid,
-      netCash: Math.round(d.totalSales) - supplierPaid,
+      externalRevenue: ext.revenue,
+      externalProfit: ext.profit,
+      netCash: Math.round(d.totalSales) + ext.revenue - supplierPaid,
     };
   });
 
   const totalSupplierPaid = supplierSummary[0]?.totalPaid ?? 0;
   const grossSales = summary[0]?.totalSales ?? 0;
+  const extRevenue = externalSummary[0]?.totalRevenue ?? 0;
+  const extProfit = externalSummary[0]?.totalProfit ?? 0;
 
   return NextResponse.json({
     chart: formattedChart,
     summary: {
       ...(summary[0] ?? { totalSales: 0, totalProfit: 0, orderCount: 0, avgOrderValue: 0 }),
       totalSupplierPayments: totalSupplierPaid,
-      netCash: grossSales - totalSupplierPaid,
+      externalRevenue: extRevenue,
+      externalProfit: extProfit,
+      netCash: grossSales + extRevenue - totalSupplierPaid,
     },
     labelField,
   });

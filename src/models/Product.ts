@@ -8,6 +8,7 @@ export interface IProduct extends Document {
   basePrice: number;
   sellingPrice: number;
   stock: number;
+  location?: string;
   image?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -22,6 +23,7 @@ const ProductSchema = new Schema<IProduct>(
     basePrice: { type: Number, required: true, min: 0 },
     sellingPrice: { type: Number, required: true, min: 0 },
     stock: { type: Number, required: true, min: 0, default: 0 },
+    location: { type: String, default: "", trim: true },
     image: { type: String, default: "" },
   },
   { timestamps: true }

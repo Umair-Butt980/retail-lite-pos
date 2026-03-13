@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import Product from "@/models/Product";
+import { escapeRegex } from "@/lib/utils";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -15,8 +16,9 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") ?? "20");
   const search = searchParams.get("search") ?? "";
 
-  const query = search
-    ? { $or: [{ name: { $regex: search, $options: "i" } }, { sku: { $regex: search, $options: "i" } }] }
+  const safe = escapeRegex(search);
+  const query = safe
+    ? { $or: [{ name: { $regex: safe, $options: "i" } }, { sku: { $regex: safe, $options: "i" } }] }
     : {};
 
   const [products, total] = await Promise.all([

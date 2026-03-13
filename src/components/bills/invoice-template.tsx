@@ -130,19 +130,22 @@ const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(({ sale
         </div>
       </div>
 
-      {/* Payment status stamp */}
-      <div className="flex justify-center mb-4">
-        <div className="border-2 border-blue-500 rounded px-4 py-1 text-blue-500 font-bold text-sm rotate-[-3deg]">
-          Bill Paid
+      {/* Signature & Stamp */}
+      <div className="grid grid-cols-2 gap-8 mb-6 mt-2">
+        <div className="flex flex-col items-center">
+          <div className="w-full h-16 border-b border-gray-400" />
+          <p className="text-xs text-gray-500 mt-1 tracking-wide uppercase">Signature</p>
+        </div>
+        <div className="flex flex-col items-center">
+          <div className="w-full h-16 border-b border-gray-400" />
+          <p className="text-xs text-gray-500 mt-1 tracking-wide uppercase">Stamp</p>
         </div>
       </div>
 
       {/* Footer Notes */}
       <div className="border-t border-gray-300 pt-3 text-xs text-gray-500 space-y-1">
-        <p>Note: 7 Days Money Back Guarantee for Un-used Products.</p>
-        <p>In case of Return Courier Charges for Returns will be charged to Customer and Payment Refund into Bank Account after Product Received Back. Kindly Check Your order as per Invoice at the time of pickup.</p>
         <p>{shopName} will not be responsible for any short Quantity.</p>
-        <p>All Electronic Products are Checked Before Dispatched. There is No Warranty for Electronic Products.</p>
+        <p>All Electronic Products are Checked on counter. There is No Warranty for Electronic Products.</p>
       </div>
 
       <div className="text-center text-xs text-gray-400 mt-4">

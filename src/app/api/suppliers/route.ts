@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import Supplier from "@/models/Supplier";
+import { escapeRegex } from "@/lib/utils";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -15,12 +16,13 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const search = searchParams.get("search") ?? "";
 
-  const query = search
+  const safe = escapeRegex(search);
+  const query = safe
     ? {
         $or: [
-          { name: { $regex: search, $options: "i" } },
-          { company: { $regex: search, $options: "i" } },
-          { phone: { $regex: search, $options: "i" } },
+          { name: { $regex: safe, $options: "i" } },
+          { company: { $regex: safe, $options: "i" } },
+          { phone: { $regex: safe, $options: "i" } },
         ],
       }
     : {};

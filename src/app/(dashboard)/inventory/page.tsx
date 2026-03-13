@@ -34,8 +34,15 @@ interface Product {
   basePrice: number;
   sellingPrice: number;
   stock: number;
+  location?: string;
   image?: string;
 }
+
+const RACK_SUGGESTIONS = [
+  "Rack A", "Rack B", "Rack C", "Rack D",
+  "Shelf 1", "Shelf 2", "Shelf 3",
+  "Store Room", "Counter", "Display",
+];
 
 const emptyForm = {
   sku: "",
@@ -45,6 +52,7 @@ const emptyForm = {
   basePrice: "",
   sellingPrice: "",
   stock: "",
+  location: "",
   image: "",
 };
 
@@ -93,6 +101,7 @@ export default function InventoryPage() {
       basePrice: String(product.basePrice),
       sellingPrice: String(product.sellingPrice),
       stock: String(product.stock),
+      location: product.location ?? "",
       image: product.image ?? "",
     });
     setDialogOpen(true);
@@ -189,6 +198,7 @@ export default function InventoryPage() {
                   <TableHead className="text-right">Selling price</TableHead>
                   <TableHead className="text-right">Profit</TableHead>
                   <TableHead className="text-right">Stock</TableHead>
+                  <TableHead>Location</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -217,6 +227,15 @@ export default function InventoryPage() {
                         {product.stock}
                         {product.stock <= 5 && <AlertTriangle className="inline ml-1 h-3 w-3 text-destructive" />}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      {product.location ? (
+                        <Badge variant="outline" className="text-xs font-normal">
+                          📦 {product.location}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -350,6 +369,22 @@ export default function InventoryPage() {
                 </span>
               </div>
             )}
+            <div className="space-y-1.5">
+              <Label htmlFor="location">Rack / Store location</Label>
+              <Input
+                id="location"
+                placeholder="e.g. Rack A, Shelf 2, Store Room..."
+                value={form.location}
+                onChange={(e) => setForm({ ...form, location: e.target.value })}
+                list="rack-suggestions"
+                aria-label="product rack location input"
+              />
+              <datalist id="rack-suggestions">
+                {RACK_SUGGESTIONS.map((s) => (
+                  <option key={s} value={s} />
+                ))}
+              </datalist>
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="image">Image URL (optional)</Label>
               <Input

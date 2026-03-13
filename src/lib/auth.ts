@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
+import { checkRateLimit, resetRateLimit } from "@/lib/rate-limit";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -15,6 +16,14 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email and password are required");
+        }
+
+        // Rate-limit by normalized email to prevent brute-force attacks
+        const rateLimitKey = `login:${credentials.email.toLowerCase()}`;
+        const { allowed, retryAfterMs } = checkRateLimit(rateLimitKey);
+        if (!allowed) {
+          const minutes = Math.ceil((retryAfterMs ?? 0) / 60000);
+          throw new Error(`Too many login attempts. Please try again in ${minutes} minute(s).`);
         }
 
         await connectDB();
@@ -30,6 +39,9 @@ export const authOptions: NextAuthOptions = {
         if (!isPasswordValid) {
           throw new Error("Incorrect password");
         }
+
+        // Successful login — clear the attempt counter for this email
+        resetRateLimit(rateLimitKey);
 
         return {
           id: user._id.toString(),

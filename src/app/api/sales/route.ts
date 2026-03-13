@@ -5,6 +5,7 @@ import connectDB from "@/lib/db";
 import Sale from "@/models/Sale";
 import Product from "@/models/Product";
 import mongoose from "mongoose";
+import { escapeRegex } from "@/lib/utils";
 
 
 export async function GET(req: NextRequest) {
@@ -18,12 +19,13 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") ?? "20");
   const search = searchParams.get("search") ?? "";
 
-  const query = search
+  const safe = escapeRegex(search);
+  const query = safe
     ? {
         $or: [
-          { invoiceNumber: { $regex: search, $options: "i" } },
-          { "customer.name": { $regex: search, $options: "i" } },
-          { "customer.phone": { $regex: search, $options: "i" } },
+          { invoiceNumber: { $regex: safe, $options: "i" } },
+          { "customer.name": { $regex: safe, $options: "i" } },
+          { "customer.phone": { $regex: safe, $options: "i" } },
         ],
       }
     : {};

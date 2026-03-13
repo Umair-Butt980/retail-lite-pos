@@ -40,8 +40,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const supplier = await Supplier.findById(id);
   if (!supplier) return NextResponse.json({ error: "Supplier not found" }, { status: 404 });
 
-  Object.assign(supplier, body);
-  // Recalculate balance
+  // Only allow updating safe fields — prevents mass assignment of totalPaid, balance, _id, etc.
+  const { name, company, phone, email, notes } = body;
+  if (name !== undefined) supplier.name = name;
+  if (company !== undefined) supplier.company = company;
+  if (phone !== undefined) supplier.phone = phone;
+  if (email !== undefined) supplier.email = email;
+  if (notes !== undefined) supplier.notes = notes;
+
   supplier.balance = supplier.totalCredit - supplier.totalPaid;
   await supplier.save();
 
