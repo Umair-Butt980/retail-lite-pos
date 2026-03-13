@@ -34,7 +34,7 @@ yarn-error.log*
 .env*
 
 # setup scripts — contain credentials, run locally only
-/scripts/seed.ts
+/scripts
 
 # vercel
 .vercel
