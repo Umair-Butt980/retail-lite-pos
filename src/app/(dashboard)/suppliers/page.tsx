@@ -28,6 +28,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   Table,
   TableBody,
   TableCell,
@@ -511,13 +518,13 @@ export default function SuppliersPage() {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Supplier Dialog */}
-      <Dialog open={supplierDialogOpen} onOpenChange={setSupplierDialogOpen}>
-        <DialogContent className="sm:max-w-md" aria-label={editSupplier ? "edit supplier dialog" : "add supplier dialog"}>
-          <DialogHeader>
-            <DialogTitle>{editSupplier ? "Edit supplier" : "Add supplier"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-2">
+      {/* Add/Edit Supplier Sheet */}
+      <Sheet open={supplierDialogOpen} onOpenChange={setSupplierDialogOpen}>
+        <SheetContent aria-label={editSupplier ? "edit supplier sheet" : "add supplier sheet"}>
+          <SheetHeader>
+            <SheetTitle>{editSupplier ? "Edit supplier" : "Add supplier"}</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-4 grid gap-3 content-start">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="sName">Supplier name *</Label>
@@ -590,7 +597,7 @@ export default function SuppliersPage() {
               />
             </div>
           </div>
-          <DialogFooter>
+          <SheetFooter>
             <Button variant="outline" onClick={() => setSupplierDialogOpen(false)} aria-label="cancel button">
               Cancel
             </Button>
@@ -601,9 +608,9 @@ export default function SuppliersPage() {
                 "Save supplier"
               )}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       {/* Record Payment Dialog */}
       <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>

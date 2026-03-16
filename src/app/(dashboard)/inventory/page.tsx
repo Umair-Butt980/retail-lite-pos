@@ -15,6 +15,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   Table,
   TableBody,
   TableCell,
@@ -276,13 +283,13 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {/* Add/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto" aria-label={editProduct ? "edit product dialog" : "add product dialog"}>
-          <DialogHeader>
-            <DialogTitle>{editProduct ? "Edit product" : "Add product"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-2">
+      {/* Add/Edit Sheet */}
+      <Sheet open={dialogOpen} onOpenChange={setDialogOpen}>
+        <SheetContent aria-label={editProduct ? "edit product sheet" : "add product sheet"}>
+          <SheetHeader>
+            <SheetTitle>{editProduct ? "Edit product" : "Add product"}</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-4 grid gap-3 content-start">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="sku">SKU *</Label>
@@ -396,14 +403,14 @@ export default function InventoryPage() {
               />
             </div>
           </div>
-          <DialogFooter>
+          <SheetFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)} aria-label="cancel button">Cancel</Button>
             <Button onClick={handleSave} disabled={saving} aria-label="save product button">
               {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</> : "Save product"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
