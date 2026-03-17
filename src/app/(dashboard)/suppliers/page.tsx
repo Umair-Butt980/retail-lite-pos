@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { format } from "date-fns";
+import { useReactToPrint } from "react-to-print";
 import {
   Plus,
   Pencil,
@@ -13,6 +14,7 @@ import {
   ChevronUp,
   CircleDollarSign,
   CheckCircle2,
+  Printer,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,7 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/utils";
+import SupplierPaymentReceipt from "@/components/bills/supplier-payment-receipt";
 
 interface Supplier {
   _id: string;
@@ -105,6 +108,17 @@ export default function SuppliersPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [supplierDetail, setSupplierDetail] = useState<Record<string, SupplierDetail>>({});
   const [loadingDetail, setLoadingDetail] = useState<string | null>(null);
+
+  // Print receipt
+  const printRef = useRef<HTMLDivElement>(null);
+  const [printingSupplier, setPrintingSupplier] = useState<string | null>(null);
+  const handlePrint = useReactToPrint({ contentRef: printRef });
+
+  function printReceipt(supplierId: string) {
+    setPrintingSupplier(supplierId);
+    // Wait one tick for the hidden receipt to render before printing
+    setTimeout(() => handlePrint(), 50);
+  }
 
   const fetchSuppliers = useCallback(async () => {
     setLoading(true);
@@ -468,9 +482,22 @@ export default function SuppliersPage() {
                               )}
 
                               <Separator className="mb-3" />
-                              <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                                Payment history
-                              </p>
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                                  Payment history
+                                </p>
+                                {detail?.payments?.length > 0 && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs h-7 gap-1"
+                                    onClick={(e) => { e.stopPropagation(); printReceipt(supplier._id); }}
+                                    aria-label={`print payment receipt for ${supplier.name}`}
+                                  >
+                                    <Printer className="h-3 w-3" /> Print receipt
+                                  </Button>
+                                )}
+                              </div>
 
                               {loadingDetail === supplier._id ? (
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
@@ -684,6 +711,17 @@ export default function SuppliersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Hidden print target — rendered off-screen, only mounted when printing */}
+      {printingSupplier && supplierDetail[printingSupplier] && (
+        <div className="hidden print:block">
+          <SupplierPaymentReceipt
+            ref={printRef}
+            supplier={supplierDetail[printingSupplier].supplier}
+            payments={supplierDetail[printingSupplier].payments}
+          />
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
