@@ -74,7 +74,29 @@ export default function InventoryPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState<Partial<Record<keyof typeof emptyForm, string>>>({});
   const [saving, setSaving] = useState(false);
+
+  function validate() {
+    const e: Partial<Record<keyof typeof emptyForm, string>> = {};
+    if (!form.sku.trim())          e.sku          = "SKU is required";
+    if (!form.name.trim())         e.name         = "Product name is required";
+    if (!form.category.trim())     e.category     = "Category is required";
+    if (!form.basePrice)           e.basePrice    = "Base price is required";
+    else if (Number(form.basePrice) < 0) e.basePrice = "Base price must be 0 or more";
+    if (!form.sellingPrice)        e.sellingPrice = "Selling price is required";
+    else if (Number(form.sellingPrice) < 0) e.sellingPrice = "Selling price must be 0 or more";
+    if (!form.stock)               e.stock        = "Stock is required";
+    else if (Number(form.stock) < 0) e.stock      = "Stock must be 0 or more";
+    if (!form.location.trim())     e.location     = "Location is required";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function field<K extends keyof typeof emptyForm>(key: K, value: string) {
+    setForm((f) => ({ ...f, [key]: value }));
+    if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
+  }
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -94,12 +116,16 @@ export default function InventoryPage() {
 
   function openAdd() {
     setEditProduct(null);
-    setForm(emptyForm);
+    setErrors({});
+    // Pre-fill SKU with auto-generated value — user can overwrite
+    const autoSku = `PRD-${String(total + 1).padStart(4, "0")}`;
+    setForm({ ...emptyForm, sku: autoSku });
     setDialogOpen(true);
   }
 
   function openEdit(product: Product) {
     setEditProduct(product);
+    setErrors({});
     setForm({
       sku: product.sku,
       name: product.name,
@@ -115,6 +141,7 @@ export default function InventoryPage() {
   }
 
   async function handleSave() {
+    if (!validate()) return;
     setSaving(true);
     try {
       const payload = {
@@ -284,7 +311,7 @@ export default function InventoryPage() {
       )}
 
       {/* Add/Edit Sheet */}
-      <Sheet open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Sheet open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) setErrors({}); }}>
         <SheetContent aria-label={editProduct ? "edit product sheet" : "add product sheet"}>
           <SheetHeader>
             <SheetTitle>{editProduct ? "Edit product" : "Add product"}</SheetTitle>
@@ -297,10 +324,13 @@ export default function InventoryPage() {
                   id="sku"
                   placeholder="ATS-0900"
                   value={form.sku}
-                  onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                  onChange={(e) => field("sku", e.target.value)}
                   disabled={!!editProduct}
+                  className={errors.sku ? "border-destructive" : ""}
                   aria-label="product SKU input"
                 />
+                {errors.sku && <p className="text-xs text-destructive">{errors.sku}</p>}
+                {!editProduct && <p className="text-xs text-muted-foreground">Auto-generated — you can change it</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="category">Category *</Label>
@@ -308,9 +338,11 @@ export default function InventoryPage() {
                   id="category"
                   placeholder="Stickers"
                   value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  onChange={(e) => field("category", e.target.value)}
+                  className={errors.category ? "border-destructive" : ""}
                   aria-label="product category input"
                 />
+                {errors.category && <p className="text-xs text-destructive">{errors.category}</p>}
               </div>
             </div>
             <div className="space-y-1.5">
@@ -319,9 +351,11 @@ export default function InventoryPage() {
                 id="name"
                 placeholder="Car Door Carbon Fiber Stickers"
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onChange={(e) => field("name", e.target.value)}
+                className={errors.name ? "border-destructive" : ""}
                 aria-label="product name input"
               />
+              {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="description">Description</Label>
@@ -329,7 +363,7 @@ export default function InventoryPage() {
                 id="description"
                 placeholder="4Pcs Car Door Carbon Fiber Anti Stepping..."
                 value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                onChange={(e) => field("description", e.target.value)}
                 aria-label="product description input"
               />
             </div>
@@ -341,9 +375,11 @@ export default function InventoryPage() {
                   type="number"
                   placeholder="120"
                   value={form.basePrice}
-                  onChange={(e) => setForm({ ...form, basePrice: e.target.value })}
+                  onChange={(e) => field("basePrice", e.target.value)}
+                  className={errors.basePrice ? "border-destructive" : ""}
                   aria-label="product base price input"
                 />
+                {errors.basePrice && <p className="text-xs text-destructive">{errors.basePrice}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="sellingPrice">Selling price *</Label>
@@ -352,9 +388,11 @@ export default function InventoryPage() {
                   type="number"
                   placeholder="200"
                   value={form.sellingPrice}
-                  onChange={(e) => setForm({ ...form, sellingPrice: e.target.value })}
+                  onChange={(e) => field("sellingPrice", e.target.value)}
+                  className={errors.sellingPrice ? "border-destructive" : ""}
                   aria-label="product selling price input"
                 />
+                {errors.sellingPrice && <p className="text-xs text-destructive">{errors.sellingPrice}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="stock">Stock *</Label>
@@ -363,9 +401,11 @@ export default function InventoryPage() {
                   type="number"
                   placeholder="50"
                   value={form.stock}
-                  onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                  onChange={(e) => field("stock", e.target.value)}
+                  className={errors.stock ? "border-destructive" : ""}
                   aria-label="product stock input"
                 />
+                {errors.stock && <p className="text-xs text-destructive">{errors.stock}</p>}
               </div>
             </div>
             {form.basePrice && form.sellingPrice && (
@@ -377,13 +417,14 @@ export default function InventoryPage() {
               </div>
             )}
             <div className="space-y-1.5">
-              <Label htmlFor="location">Rack / Store location</Label>
+              <Label htmlFor="location">Rack / Store location *</Label>
               <Input
                 id="location"
                 placeholder="e.g. Rack A, Shelf 2, Store Room..."
                 value={form.location}
-                onChange={(e) => setForm({ ...form, location: e.target.value })}
+                onChange={(e) => field("location", e.target.value)}
                 list="rack-suggestions"
+                className={errors.location ? "border-destructive" : ""}
                 aria-label="product rack location input"
               />
               <datalist id="rack-suggestions">
@@ -391,6 +432,7 @@ export default function InventoryPage() {
                   <option key={s} value={s} />
                 ))}
               </datalist>
+              {errors.location && <p className="text-xs text-destructive">{errors.location}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="image">Image URL (optional)</Label>
@@ -398,7 +440,7 @@ export default function InventoryPage() {
                 id="image"
                 placeholder="https://..."
                 value={form.image}
-                onChange={(e) => setForm({ ...form, image: e.target.value })}
+                onChange={(e) => field("image", e.target.value)}
                 aria-label="product image URL input"
               />
             </div>

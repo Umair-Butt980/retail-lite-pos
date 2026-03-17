@@ -88,7 +88,26 @@ export default function ExternalWorkPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editWork, setEditWork] = useState<ExternalWork | null>(null);
   const [form, setForm] = useState<typeof emptyForm>(emptyForm);
+  const [errors, setErrors] = useState<Partial<Record<keyof typeof emptyForm, string>>>({});
   const [saving, setSaving] = useState(false);
+
+  function validate() {
+    const e: Partial<Record<keyof typeof emptyForm, string>> = {};
+    if (!form.title.trim())         e.title         = "Job title is required";
+    if (!form.customerName.trim())  e.customerName  = "Customer name is required";
+    if (!form.customerPhone.trim()) e.customerPhone = "Phone number is required";
+    if (!form.labourCost)           e.labourCost    = "Labour cost is required";
+    else if (Number(form.labourCost) < 0) e.labourCost = "Labour cost must be 0 or more";
+    if (!form.chargedPrice)         e.chargedPrice  = "Charged price is required";
+    else if (Number(form.chargedPrice) <= 0) e.chargedPrice = "Charged price must be greater than 0";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function field<K extends keyof typeof emptyForm>(key: K, value: string) {
+    setForm((f) => ({ ...f, [key]: value }));
+    if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
+  }
 
   const fetchWorks = useCallback(async () => {
     setLoading(true);
@@ -108,12 +127,14 @@ export default function ExternalWorkPage() {
 
   function openAdd() {
     setEditWork(null);
+    setErrors({});
     setForm(emptyForm);
     setDialogOpen(true);
   }
 
   function openEdit(work: ExternalWork) {
     setEditWork(work);
+    setErrors({});
     setForm({
       title: work.title,
       description: work.description ?? "",
@@ -128,6 +149,7 @@ export default function ExternalWorkPage() {
   }
 
   async function handleSave() {
+    if (!validate()) return;
     setSaving(true);
     try {
       const payload = {
@@ -350,7 +372,7 @@ export default function ExternalWorkPage() {
       )}
 
       {/* Add/Edit Sheet */}
-      <Sheet open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Sheet open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) setErrors({}); }}>
         <SheetContent aria-label={editWork ? "edit work order sheet" : "add work order sheet"}>
           <SheetHeader>
             <SheetTitle>{editWork ? "Edit work order" : "Add work order"}</SheetTitle>
@@ -362,13 +384,15 @@ export default function ExternalWorkPage() {
                 id="wTitle"
                 placeholder="e.g. Paint job, Engine repair..."
                 value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                onChange={(e) => field("title", e.target.value)}
                 list="work-suggestions"
+                className={errors.title ? "border-destructive" : ""}
                 aria-label="job title input"
               />
               <datalist id="work-suggestions">
                 {WORK_SUGGESTIONS.map((s) => <option key={s} value={s} />)}
               </datalist>
+              {errors.title && <p className="text-xs text-destructive">{errors.title}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="wDesc">Description</Label>
@@ -376,7 +400,7 @@ export default function ExternalWorkPage() {
                 id="wDesc"
                 placeholder="Details about the work done..."
                 value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                onChange={(e) => field("description", e.target.value)}
                 aria-label="work description input"
               />
             </div>
@@ -387,9 +411,11 @@ export default function ExternalWorkPage() {
                   id="wCustName"
                   placeholder="Customer name"
                   value={form.customerName}
-                  onChange={(e) => setForm({ ...form, customerName: e.target.value })}
+                  onChange={(e) => field("customerName", e.target.value)}
+                  className={errors.customerName ? "border-destructive" : ""}
                   aria-label="customer name input"
                 />
+                {errors.customerName && <p className="text-xs text-destructive">{errors.customerName}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="wCustPhone">Phone *</Label>
@@ -397,9 +423,11 @@ export default function ExternalWorkPage() {
                   id="wCustPhone"
                   placeholder="03001234567"
                   value={form.customerPhone}
-                  onChange={(e) => setForm({ ...form, customerPhone: e.target.value })}
+                  onChange={(e) => field("customerPhone", e.target.value)}
+                  className={errors.customerPhone ? "border-destructive" : ""}
                   aria-label="customer phone input"
                 />
+                {errors.customerPhone && <p className="text-xs text-destructive">{errors.customerPhone}</p>}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -410,9 +438,11 @@ export default function ExternalWorkPage() {
                   type="number"
                   placeholder="2000"
                   value={form.labourCost}
-                  onChange={(e) => setForm({ ...form, labourCost: e.target.value })}
+                  onChange={(e) => field("labourCost", e.target.value)}
+                  className={errors.labourCost ? "border-destructive" : ""}
                   aria-label="labour cost input"
                 />
+                {errors.labourCost && <p className="text-xs text-destructive">{errors.labourCost}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="wCharged">Charged price (Rs.) *</Label>
@@ -421,9 +451,11 @@ export default function ExternalWorkPage() {
                   type="number"
                   placeholder="3500"
                   value={form.chargedPrice}
-                  onChange={(e) => setForm({ ...form, chargedPrice: e.target.value })}
+                  onChange={(e) => field("chargedPrice", e.target.value)}
+                  className={errors.chargedPrice ? "border-destructive" : ""}
                   aria-label="charged price input"
                 />
+                {errors.chargedPrice && <p className="text-xs text-destructive">{errors.chargedPrice}</p>}
               </div>
             </div>
 

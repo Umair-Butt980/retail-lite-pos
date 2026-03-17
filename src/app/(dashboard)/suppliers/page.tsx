@@ -92,7 +92,26 @@ export default function SuppliersPage() {
   const [supplierDialogOpen, setSupplierDialogOpen] = useState(false);
   const [editSupplier, setEditSupplier] = useState<Supplier | null>(null);
   const [supplierForm, setSupplierForm] = useState(emptySupplierForm);
+  const [supplierErrors, setSupplierErrors] = useState<Partial<Record<keyof typeof emptySupplierForm, string>>>({});
   const [savingSupplier, setSavingSupplier] = useState(false);
+
+  function validateSupplier() {
+    const e: Partial<Record<keyof typeof emptySupplierForm, string>> = {};
+    if (!supplierForm.name.trim())    e.name    = "Supplier name is required";
+    if (!supplierForm.company.trim()) e.company = "Company is required";
+    if (!supplierForm.phone.trim())   e.phone   = "Phone number is required";
+    if (!editSupplier) {
+      if (!supplierForm.totalCredit)             e.totalCredit = "Credit amount is required";
+      else if (Number(supplierForm.totalCredit) <= 0) e.totalCredit = "Credit amount must be greater than 0";
+    }
+    setSupplierErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function supplierField<K extends keyof typeof emptySupplierForm>(key: K, value: string) {
+    setSupplierForm((f) => ({ ...f, [key]: value }));
+    if (supplierErrors[key]) setSupplierErrors((e) => ({ ...e, [key]: undefined }));
+  }
 
   // Delete confirmation
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -156,12 +175,14 @@ export default function SuppliersPage() {
 
   function openAddSupplier() {
     setEditSupplier(null);
+    setSupplierErrors({});
     setSupplierForm(emptySupplierForm);
     setSupplierDialogOpen(true);
   }
 
   function openEditSupplier(supplier: Supplier) {
     setEditSupplier(supplier);
+    setSupplierErrors({});
     setSupplierForm({
       name: supplier.name,
       company: supplier.company,
@@ -174,6 +195,7 @@ export default function SuppliersPage() {
   }
 
   async function handleSaveSupplier() {
+    if (!validateSupplier()) return;
     setSavingSupplier(true);
     try {
       const payload = {
@@ -546,7 +568,7 @@ export default function SuppliersPage() {
       </Card>
 
       {/* Add/Edit Supplier Sheet */}
-      <Sheet open={supplierDialogOpen} onOpenChange={setSupplierDialogOpen}>
+      <Sheet open={supplierDialogOpen} onOpenChange={(o) => { setSupplierDialogOpen(o); if (!o) setSupplierErrors({}); }}>
         <SheetContent aria-label={editSupplier ? "edit supplier sheet" : "add supplier sheet"}>
           <SheetHeader>
             <SheetTitle>{editSupplier ? "Edit supplier" : "Add supplier"}</SheetTitle>
@@ -559,9 +581,11 @@ export default function SuppliersPage() {
                   id="sName"
                   placeholder="Ali Raza"
                   value={supplierForm.name}
-                  onChange={(e) => setSupplierForm({ ...supplierForm, name: e.target.value })}
+                  onChange={(e) => supplierField("name", e.target.value)}
+                  className={supplierErrors.name ? "border-destructive" : ""}
                   aria-label="supplier name input"
                 />
+                {supplierErrors.name && <p className="text-xs text-destructive">{supplierErrors.name}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="sCompany">Company *</Label>
@@ -569,9 +593,11 @@ export default function SuppliersPage() {
                   id="sCompany"
                   placeholder="ATS Traders"
                   value={supplierForm.company}
-                  onChange={(e) => setSupplierForm({ ...supplierForm, company: e.target.value })}
+                  onChange={(e) => supplierField("company", e.target.value)}
+                  className={supplierErrors.company ? "border-destructive" : ""}
                   aria-label="supplier company input"
                 />
+                {supplierErrors.company && <p className="text-xs text-destructive">{supplierErrors.company}</p>}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -581,9 +607,11 @@ export default function SuppliersPage() {
                   id="sPhone"
                   placeholder="03001234567"
                   value={supplierForm.phone}
-                  onChange={(e) => setSupplierForm({ ...supplierForm, phone: e.target.value })}
+                  onChange={(e) => supplierField("phone", e.target.value)}
+                  className={supplierErrors.phone ? "border-destructive" : ""}
                   aria-label="supplier phone input"
                 />
+                {supplierErrors.phone && <p className="text-xs text-destructive">{supplierErrors.phone}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="sEmail">Email</Label>
@@ -591,7 +619,7 @@ export default function SuppliersPage() {
                   id="sEmail"
                   placeholder="supplier@example.com"
                   value={supplierForm.email}
-                  onChange={(e) => setSupplierForm({ ...supplierForm, email: e.target.value })}
+                  onChange={(e) => supplierField("email", e.target.value)}
                   aria-label="supplier email input"
                 />
               </div>
@@ -603,14 +631,17 @@ export default function SuppliersPage() {
                 type="number"
                 placeholder="50000"
                 value={supplierForm.totalCredit}
-                onChange={(e) => setSupplierForm({ ...supplierForm, totalCredit: e.target.value })}
+                onChange={(e) => supplierField("totalCredit", e.target.value)}
                 disabled={!!editSupplier}
+                className={supplierErrors.totalCredit ? "border-destructive" : ""}
                 aria-label="total credit amount input"
               />
-              {editSupplier && (
+              {editSupplier ? (
                 <p className="text-xs text-muted-foreground">
                   Credit amount cannot be changed after creation. Record a payment to update balance.
                 </p>
+              ) : (
+                supplierErrors.totalCredit && <p className="text-xs text-destructive">{supplierErrors.totalCredit}</p>
               )}
             </div>
             <div className="space-y-1.5">
@@ -619,7 +650,7 @@ export default function SuppliersPage() {
                 id="sNotes"
                 placeholder="e.g. pays every Monday"
                 value={supplierForm.notes}
-                onChange={(e) => setSupplierForm({ ...supplierForm, notes: e.target.value })}
+                onChange={(e) => supplierField("notes", e.target.value)}
                 aria-label="supplier notes input"
               />
             </div>
